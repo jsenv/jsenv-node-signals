@@ -16,7 +16,7 @@ Register callback on node process signals.
 
 `jsenv-node-signals` github repository corresponds to `@jsenv/node-signals` package published on github and npm package registries.
 
-`@jsenv/node-signals` ...
+`@jsenv/node-signals` was designed to cleanup things (gracefully if possible), when node process exits or crash.
 
 ## Installation
 
