@@ -14,12 +14,24 @@ Register callback on node process signals.
 
 # Presentation
 
-`jsenv-node-signals` github repository corresponds to `@jsenv/node-signals` package published on github and npm package registries.
-
 `@jsenv/node-signals` was designed to cleanup things (gracefully if possible), when node process exits or crash.
 
 # Installation
 
 ```console
-npm install @jsenv/node-signals@1.1.0
+npm install @jsenv/node-signals@1.2.1
+```
+
+```js
+import { teardownSignal } from "@jsenv/node-signals"
+
+teardownSignal.addCallback((reason) => {
+  console.log(`teardown because ${reason}`)
+})
+```
+
+For node < 13
+
+```js
+const { teardownSignal } = require("@jsenv/node-signals")
 ```
