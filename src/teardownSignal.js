@@ -1,23 +1,31 @@
+import { SIGTERMSignal } from "./SIGTERMSignal.js"
+import { SIGINTSignal } from "./SIGINTSignal.js"
+import { SIGUPSignal } from "./SIGUPSignal.js"
 import { beforeExitSignal } from "./beforeExitSignal.js"
 import { exitSignal } from "./exitSignal.js"
-import { deathSignal } from "./deathSignal.js"
-import { hangupOrDeathSignal } from "./hangupOrDeathSignal.js"
 
-// when any of SIGUP, SIGINT, SIGTERM, beforeExit, exit is emitted callback is called
 // usefull to ensure a given server is closed when process stops for instance
 const addCallback = (callback) => {
   return eventRace({
+    SIGHUP: {
+      register: SIGUPSignal.addCallback,
+      callback: () => callback("SIGHUP"),
+    },
+    SIGINT: {
+      register: SIGINTSignal.addCallback,
+      callback: () => callback("SIGINT"),
+    },
+    ...(process.paltform === "win32"
+      ? {}
+      : {
+          SIGTERM: {
+            register: SIGTERMSignal.addCallback,
+            callback: () => callback("SIGTERM"),
+          },
+        }),
     beforeExit: {
       register: beforeExitSignal.addCallback,
       callback: () => callback("beforeExit"),
-    },
-    hangupOrDeath: {
-      register: hangupOrDeathSignal.addCallback,
-      callback: () => callback("hangupOrDeath"),
-    },
-    death: {
-      register: deathSignal.addCallback,
-      callback: () => callback("death"),
     },
     exit: {
       register: exitSignal.addCallback,

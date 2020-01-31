@@ -14,12 +14,12 @@ Register callback on node process signals.
 
 # Presentation
 
-`@jsenv/node-signals` was designed to cleanup things (gracefully if possible), when node process exits or crash.
+`@jsenv/node-signals` was designed to cleanup things (gracefully if possible), when node process exits.
 
 # Installation
 
 ```console
-npm install @jsenv/node-signals@1.2.1
+npm install @jsenv/node-signals@2.0.0
 ```
 
 ```js

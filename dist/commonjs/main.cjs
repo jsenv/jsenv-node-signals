@@ -2,10 +2,57 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+const addCallback = callback => {
+  const triggerHangUpOrDeath = () => callback(); // SIGHUP http://man7.org/linux/man-pages/man7/signal.7.html
+
+
+  process.once("SIGUP", triggerHangUpOrDeath);
+  return () => {
+    process.removeListener("SIGUP", triggerHangUpOrDeath);
+  };
+};
+
+const SIGUPSignal = {
+  addCallback
+};
+
+const addCallback$1 = callback => {
+  // SIGINT is CTRL+C from keyboard also refered as keyboard interruption
+  // http://man7.org/linux/man-pages/man7/signal.7.html
+  // may also be sent by vscode https://github.com/Microsoft/vscode-node-debug/issues/1#issuecomment-405185642
+  process.once("SIGINT", callback);
+  return () => {
+    process.removeListener("SIGINT", callback);
+  };
+};
+
+const SIGINTSignal = {
+  addCallback: addCallback$1
+};
+
+const addCallback$2 = callback => {
+  if (process.platform === "win32") {
+    console.warn(`SIGTERM is not supported on windows`);
+    return () => {};
+  }
+
+  const triggerTermination = () => callback(); // SIGTERM http://man7.org/linux/man-pages/man7/signal.7.html
+
+
+  process.once("SIGTERM", triggerTermination);
+  return () => {
+    process.removeListener("SIGTERM", triggerTermination);
+  };
+};
+
+const SIGTERMSignal = {
+  addCallback: addCallback$2
+};
+
 let beforeExitCallbackArray = [];
 let uninstall;
 
-const addCallback = callback => {
+const addCallback$3 = callback => {
   if (beforeExitCallbackArray.length === 0) uninstall = install();
   beforeExitCallbackArray = [...beforeExitCallbackArray, callback];
   return () => {
@@ -30,24 +77,10 @@ const install = () => {
 };
 
 const beforeExitSignal = {
-  addCallback
+  addCallback: addCallback$3
 };
 
-const addCallback$1 = callback => {
-  const triggerDeath = () => callback(); // SIGTERM http://man7.org/linux/man-pages/man7/signal.7.html
-
-
-  process.once("SIGTERM", triggerDeath);
-  return () => {
-    process.removeListener("SIGTERM", triggerDeath);
-  };
-};
-
-const deathSignal = {
-  addCallback: addCallback$1
-};
-
-const addCallback$2 = (callback, {
+const addCallback$4 = (callback, {
   collectExceptions = false
 } = {}) => {
   if (!collectExceptions) {
@@ -126,52 +159,28 @@ const trackExceptions = () => {
 };
 
 const exitSignal = {
-  addCallback: addCallback$2
-};
-
-const addCallback$3 = callback => {
-  const triggerHangUpOrDeath = () => callback(); // SIGHUP http://man7.org/linux/man-pages/man7/signal.7.html
-
-
-  process.once("SIGUP", triggerHangUpOrDeath);
-  return () => {
-    process.removeListener("SIGUP", triggerHangUpOrDeath);
-  };
-};
-
-const hangupOrDeathSignal = {
-  addCallback: addCallback$3
-};
-
-const addCallback$4 = callback => {
-  // SIGINT is CTRL+C from keyboard
-  // http://man7.org/linux/man-pages/man7/signal.7.html
-  // may also be sent by vscode https://github.com/Microsoft/vscode-node-debug/issues/1#issuecomment-405185642
-  process.once("SIGINT", callback);
-  return () => {
-    process.removeListener("SIGINT", callback);
-  };
-};
-
-const interruptSignal = {
   addCallback: addCallback$4
 };
 
-// usefull to ensure a given server is closed when process stops for instance
-
 const addCallback$5 = callback => {
   return eventRace({
+    SIGHUP: {
+      register: SIGUPSignal.addCallback,
+      callback: () => callback("SIGHUP")
+    },
+    SIGINT: {
+      register: SIGINTSignal.addCallback,
+      callback: () => callback("SIGINT")
+    },
+    ...(process.paltform === "win32" ? {} : {
+      SIGTERM: {
+        register: SIGTERMSignal.addCallback,
+        callback: () => callback("SIGTERM")
+      }
+    }),
     beforeExit: {
       register: beforeExitSignal.addCallback,
       callback: () => callback("beforeExit")
-    },
-    hangupOrDeath: {
-      register: hangupOrDeathSignal.addCallback,
-      callback: () => callback("hangupOrDeath")
-    },
-    death: {
-      register: deathSignal.addCallback,
-      callback: () => callback("death")
     },
     exit: {
       register: exitSignal.addCallback,
@@ -364,11 +373,11 @@ const unadvisedCrashSignal = {
   addCallback: addCallback$6
 };
 
+exports.SIGINTSignal = SIGINTSignal;
+exports.SIGTERMSignal = SIGTERMSignal;
+exports.SIGUPSignal = SIGUPSignal;
 exports.beforeExitSignal = beforeExitSignal;
-exports.deathSignal = deathSignal;
 exports.exitSignal = exitSignal;
-exports.hangupOrDeathSignal = hangupOrDeathSignal;
-exports.interruptSignal = interruptSignal;
 exports.teardownSignal = teardownSignal;
 exports.unadvisedCrashSignal = unadvisedCrashSignal;
 //# sourceMappingURL=main.cjs.map
