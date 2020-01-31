@@ -7,6 +7,6 @@ const addCallback = (callback) => {
   }
 }
 
-export const hangupOrDeathSignal = {
+export const SIGUPSignal = {
   addCallback,
 }
