@@ -15,7 +15,7 @@ const addCallback = (callback) => {
       register: SIGINTSignal.addCallback,
       callback: () => callback("SIGINT"),
     },
-    ...(process.paltform === "win32"
+    ...(process.platform === "win32"
       ? {}
       : {
           SIGTERM: {
